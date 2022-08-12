@@ -1,0 +1,42 @@
+{
+  "name": "visual-diff-report",
+  "version": "0.0.1",
+  "description": "",
+  "type": "module",
+  "bin": "./dist/src/cli.js",
+  "scripts": {
+    "test": "npx mocha dist/test/**/*.test.js",
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "dev": "concurrently --kill-others \"npm run watch\" \"npx vite serve --config src/vite.config.dev.ts\"",
+    "build:app": "npx vite build --config src/vite.config.ts",
+    "doc:build": "typedoc src/lit-shared-state.ts --out dist&&npx rimraf doc/dist&&npx copyfiles src/lit-shared-state.ts doc --flat&&rollup --config doc/rollup.config.build.js",
+    "doc:serve": "npx copyfiles src/lit-shared-state.ts doc --flat&&rollup --config doc/rollup.config.dev.js --watch",
+    "build:watch": "tsc --watch"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chai": "^4.3.3",
+    "@web/test-runner": "^0.14.0",
+    "@web/test-runner-playwright": "^0.8.10",
+    "chai": "^4.3.6",
+    "chalk": "^5.0.1",
+    "concurrently": "^7.3.0",
+    "eslint": "^8.21.0",
+    "mocha": "^10.0.0",
+    "path-browserify": "^1.0.1",
+    "prettier": "^2.7.1",
+    "ts-command-line-args": "^2.3.1",
+    "tslib": "^2.4.0"
+  },
+  "dependencies": {
+    "@types/fs-extra": "^9.0.13",
+    "fast-glob": "^3.2.11",
+    "fs-extra": "^10.1.0",
+    "lit": "^2.2.7",
+    "path-browserify": "^1.0.1",
+    "typescript": "^4.7.4",
+    "vite": "^3.0.4"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "importHelpers": true,
+    "inlineSources": true,
+    "target": "es2022",
+    "moduleResolution": "node",
+    "module": "es2022",
+    "lib": ["esnext.array", "esnext", "dom", "es2022"],
+    "strict": true,
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "declaration": true,
+    "sourceMap": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "outDir": "./dist/",
+    "experimentalDecorators": true,
+    "baseUrl": "src"
+  },
+  "include": ["src/*", "test/*"],
+  "exclude": ["node_modules"],
+  "references": [
+    {"path": "./src/app"}
+  ]
+}
