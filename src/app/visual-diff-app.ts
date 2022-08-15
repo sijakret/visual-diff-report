@@ -1,13 +1,19 @@
-import { html, css, LitElement } from "lit";
+import { html, css, LitElement, TemplateResult } from "lit";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { customElement, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
 import { VisualDiffImage, VisualDiffReportDB } from "../shared";
 import { basename } from "path";
 import info from "./info.svg?raw";
+import folder from "./folder.svg?raw";
 
 import "./visual-diff";
 import { item } from "./styles";
+
+interface Subtree extends VisualDiffImage {
+  name?: string;
+  folder?: string[];
+}
 
 @customElement("visual-diff-app")
 export class VisualDiffApp extends LitElement {
@@ -29,6 +35,19 @@ export class VisualDiffApp extends LitElement {
         margin-bottom: 30px;
         font-size: 14px;
         font-weight: 100;
+      }
+      .subtree {
+        margin-left: 10px;
+        margin-top: 10px;
+      }
+      .subtree-title {
+        margin-left: 6px;
+        padding-bottom: 4px;
+        margin-top: 16px;
+        border-bottom: 1px dashed rgba(0, 0, 0, 0.2);
+      }
+      .subtree-title svg {
+        opacity: 0.8;
       }
       .menu {
         margin: 20px;
@@ -104,9 +123,11 @@ export class VisualDiffApp extends LitElement {
         display: block;
         border-radius: 20px;
         height: 10px;
+        min-height: 10px;
         margin-right: 8px;
         margin-left: 8px;
         width: 10px;
+        min-width: 10px;
       }
       .failed {
         background: rgba(255, 0, 0, 0.2);
@@ -209,13 +230,59 @@ export class VisualDiffApp extends LitElement {
         })
       : Object.values(this.db?.images);
   }
+
+  get folded(): Subtree {
+    const filtered = this.filtered;
+
+    const folders = {};
+
+    filtered.forEach((item) => {
+      let folder: Record<string, any> = folders;
+      item.folder.slice(0, -1).forEach((f) => {
+        const name = `_subtree:${f}`;
+        folder = folder[name] || (folder[name] = {});
+      });
+      folder[item.folder[item.folder.length - 1] as string] = item;
+    });
+
+    console.log(folders);
+
+    return folders;
+  }
   disconnectedCallback(): void {
     document.body.removeEventListener("keydown", this._keyDown);
     this._observer?.disconnect();
   }
 
   renderMenu() {
-    const filtered = this.filtered;
+    const folded = this.folded;
+
+    let index = 0;
+    const renderSubtree = (_subtree: Subtree): TemplateResult[] => {
+      return Object.entries(_subtree).map(([key, image]) => {
+        const subtree = key.match(/^_subtree:(?<tree>.*)/);
+        return subtree
+          ? html`<div>
+              <div class="subtree-title">
+                ${unsafeHTML(folder)} ${subtree?.groups?.tree}
+              </div>
+              <div class="subtree">${renderSubtree(image)}</div>
+            </div>`
+          : html`<div
+              @click=${() => (this.selected = index)}
+              class=${classMap({
+                item: true,
+                passed: !image.diff,
+                failed: !!image.diff,
+                selected: index++ === this.selected,
+              })}
+              index=${index}
+            >
+              <div class="indicator"></div>
+              ${this.getName(image as VisualDiffImage)}
+            </div>`;
+      });
+    };
     return this.db
       ? html` <div class="help" @click=${() => (this.help = true)}>
             ${unsafeHTML(info)}
@@ -245,21 +312,7 @@ export class VisualDiffApp extends LitElement {
           </div>
           <div class="hr"></div>
           <div class="list">
-            ${filtered.length === 0 ? html`<i>- no images -</i>` : ""}
-            ${filtered.map((image, index) => {
-              return html`<div
-                @click=${() => (this.selected = index)}
-                class=${classMap({
-                  item: true,
-                  passed: !image.diff,
-                  failed: !!image.diff,
-                  selected: index === this.selected,
-                })}
-              >
-                <div class="indicator"></div>
-                ${this.getName(image)}
-              </div>`;
-            })}
+            ${false ? html`<i>- no images -</i>` : ""} ${renderSubtree(folded)}
           </div>`
       : undefined;
   }
@@ -305,13 +358,22 @@ export class VisualDiffApp extends LitElement {
     if (!this.db) {
       return;
     }
+    const scroll = () => {
+      requestAnimationFrame(() => {
+        this.renderRoot
+          .querySelector(`.item[index="${this.selected}"]`)
+          ?.scrollIntoView();
+      });
+    };
     if (e.key === "ArrowUp") {
       this.selected =
         (this.selected - 1 + Object.values(this.filtered).length) %
         Object.values(this.filtered).length;
+      scroll();
     }
     if (e.key === "ArrowDown") {
       this.selected = (this.selected + 1) % Object.values(this.filtered).length;
+      scroll();
     }
     const ntabs = 4;
     if (e.key === "ArrowLeft") {

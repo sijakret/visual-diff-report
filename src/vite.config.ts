@@ -1,6 +1,7 @@
 import VisualDiffAppPlugin from "./plugin.js";
 import { defineConfig } from "vite";
 import { VisualDiffReportConfig } from "generate.js";
+import { viteSingleFile } from "vite-plugin-singlefile";
 
 /**
  * spits out vite config given visual diff config
@@ -20,6 +21,6 @@ export default (
         path: "path-browserify",
       },
     },
-    plugins: [VisualDiffAppPlugin(config)],
+    plugins: [VisualDiffAppPlugin(config), viteSingleFile()],
     root: "./src/app",
   });

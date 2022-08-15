@@ -1,0 +1,5 @@
+.tmp
+src
+test
+*.tgz
+test-data

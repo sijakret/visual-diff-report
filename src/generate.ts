@@ -12,30 +12,84 @@ import { fileURLToPath } from "url";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 /**
- * main options
+ * main config options
  */
 export interface VisualDiffReportConfig {
   /**
-   *
+   * title of report
    */
   reportTitle: string;
+
+  /**
+   * root directory where images are found
+   */
   rootDir: string;
-  outDir: string;
-  verbose: boolean;
+
+  /**
+   * optional
+   * output directory (defaults to root dir)
+   */
+  outDir?: string;
+
+  /**
+   * optional
+   * enable verbose logging
+   */
+  verbose?: boolean;
+
+  /**
+   * optional
+   * additional FastGlobOptions to discover image files
+   */
   globImagesOptions?: FastGlobOptions;
-  globImages: string | string[]; // relative to root dir
-  isBaseline: (path: string) => boolean;
-  isCurrent: (path: string) => boolean;
-  baselineToCurrent: (baselinePath: string) => string;
-  currentToBaseline: (currentPath: string) => string;
+
+  /**
+   * optional
+   * glob pattern for image files
+   */
+  globImages?: string | string[]; // relative to root dir
+
+  /**
+   * optional
+   * function must return true for paths of "baseline" images
+   */
+  isBaseline?: (path: string) => boolean;
+
+  /**
+   * optional
+   * function must return true for paths of "current" images
+   */
+  isCurrent?: (path: string) => boolean;
+
+  /**
+   * optional
+   * function must map "baseline" image to corresponding "current" image
+   */
+  baselineToCurrent?: (baselinePath: string) => string;
+
+  /**
+   * optional
+   * function must map "current" image to corresponding "baseline" image
+   */
+  currentToBaseline?: (currentPath: string) => string;
+
+  /**
+   * optional
+   * function must map "baseline" image to corresponding "diff" image
+   */
   baselineToDiff: (currentPath: string) => string;
+
+  /**
+   * optional
+   * function must map "baseline" image to corresponding "current" image
+   */
   fold: (path: string) => string[];
 }
 
 /**
  * default options
  */
-export const defaultOptions: VisualDiffReportConfig = {
+export const defaultOptions = {
   reportTitle: "Unnamed Diff",
   outDir: "",
   rootDir: process.cwd(),
@@ -49,7 +103,10 @@ export const defaultOptions: VisualDiffReportConfig = {
   currentToBaseline: (path: string) =>
     norm(path).replace(/(current\/)/, `baseline/`),
   fold: (path: string) => {
-    return path.replace(/\/current\/|\/baseline\/|\/diff\/|/, "/").split("/");
+    return path
+      .replace(/(current\/)|(baseline\/)|(diff\/)/i, "")
+      .split("/")
+      .filter((i) => !!i);
   },
 };
 
@@ -122,7 +179,7 @@ export async function createDB(
     baselineToDiff,
     currentToBaseline,
     fold,
-  }: VisualDiffReportConfig = {
+  } = {
     ...defaultOptions,
     ...opts,
   };

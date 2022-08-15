@@ -26,6 +26,14 @@ export class VisualDiff extends LitElement {
         padding-bottom: 20px;
         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
       }
+      .hidden {
+        opacity: 0.2;
+      }
+      .n-a {
+        margin: auto;
+        opacity: 0.2;
+        font-size: 60px;
+      }
       .item {
         background: none;
       }
@@ -99,21 +107,25 @@ export class VisualDiff extends LitElement {
         title: "Baseline",
         render: this.renderImage(this.image?.baseline),
         before: () => this.stopCycle(),
+        show: () => !!this.image?.baseline,
       },
       {
         title: "Current",
         render: this.renderImage(this.image?.current),
         before: () => this.stopCycle(),
+        show: () => !!this.image?.current,
       },
       {
         title: "Diff",
         render: this.renderImage(this.image?.diff),
         before: () => this.stopCycle(),
+        show: () => !!this.image?.diff,
       },
       {
         title: "Cycle A/B",
         render: () => this.renderCycle(),
         before: () => this.startCycle(),
+        show: () => !!this.image?.diff,
       },
     ];
   }
@@ -131,23 +143,26 @@ export class VisualDiff extends LitElement {
             <i>${this.dimensions}</i>
           </div>
         </div>
-        <div class="image-container">
-          <img
-            src=${image}
-            @load=${({ path }: { path: HTMLImageElement[] }) => {
-              const img = path[0];
-              this.dimensions = `${img.naturalWidth} x ${img.naturalHeight}px`;
-            }}
-          />
-        </div>`;
+        ${image
+          ? html` <div class="image-container">
+              <img
+                src=${image}
+                @load=${({ path }: { path: HTMLImageElement[] }) => {
+                  const img = path[0];
+                  this.dimensions = `${img.naturalWidth} x ${img.naturalHeight}px`;
+                }}
+              />
+            </div>`
+          : html`<div class="n-a">not available</div>`} `;
   }
 
   renderMenu(): TemplateResult[] {
     return this.tabs().map(
-      ({ title, before }, index) =>
+      ({ title, show }, index) =>
         html`<button
           class=${classMap({
             item: true,
+            hidden: !show(),
             selected: this.tab === index,
           })}
           @click=${() => {

@@ -15,11 +15,16 @@ describe("basic report generation", () => {
       rootDir: "test-data",
     });
     expect(db.images).to.deep.equal({
+      "baseline/subfolder/shapes-1.png": {
+        baseline: "baseline/subfolder/shapes-1.png",
+        current: "current/subfolder/shapes-1.png",
+        folder: ["subfolder", "shapes-1.png"],
+      },
       "baseline/shapes.png": {
         baseline: "baseline/shapes.png",
         current: "current/shapes.png",
         diff: "diff/shapes.png",
-        folder: ["", "baseline", "shapes.png"],
+        folder: ["shapes.png"],
       },
     });
   });

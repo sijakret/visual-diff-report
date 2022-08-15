@@ -1,6 +1,6 @@
 {
-  "name": "visual-diff-report",
-  "version": "0.0.1",
+  "name": "visual-diff-html-report",
+  "version": "0.0.2",
   "description": "",
   "type": "module",
   "bin": "./dist/src/cli.js",
@@ -14,8 +14,11 @@
     "doc:serve": "npx copyfiles src/lit-shared-state.ts doc --flat&&rollup --config doc/rollup.config.dev.js --watch",
     "build:watch": "tsc --watch"
   },
-  "author": "",
-  "license": "ISC",
+  "author": {
+    "email": "sijakret@gmail.com",
+    "name": "Jan Kretschmer"
+  },
+  "license": "MIT",
   "devDependencies": {
     "@types/chai": "^4.3.3",
     "@web/test-runner": "^0.14.0",
@@ -37,6 +40,7 @@
     "lit": "^2.2.7",
     "path-browserify": "^1.0.1",
     "typescript": "^4.7.4",
-    "vite": "^3.0.4"
+    "vite": "^3.0.4",
+    "vite-plugin-singlefile": "^0.11.1"
   }
 }
