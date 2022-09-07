@@ -257,10 +257,26 @@ export class VisualDiffApp extends LitElement {
   renderMenu() {
     const folded = this.folded;
 
-    let index = 0;
+    let index = -1;
     const renderSubtree = (_subtree: Subtree): TemplateResult[] => {
       return Object.entries(_subtree).map(([key, image]) => {
         const subtree = key.match(/^_subtree:(?<tree>.*)/);
+        const item = () => {
+          index++;
+          return html`<div
+            @click=${() => (this.selected = index)}
+            index=${index}
+            class=${classMap({
+              item: true,
+              passed: !image.diff,
+              failed: !!image.diff,
+              selected: index === this.selected,
+            })}
+          >
+            <div class="indicator"></div>
+            ${this.getName(image as VisualDiffImage)}
+          </div>`;
+        };
         return subtree
           ? html`<div>
               <div class="subtree-title">
@@ -268,19 +284,7 @@ export class VisualDiffApp extends LitElement {
               </div>
               <div class="subtree">${renderSubtree(image)}</div>
             </div>`
-          : html`<div
-              @click=${() => (this.selected = index)}
-              class=${classMap({
-                item: true,
-                passed: !image.diff,
-                failed: !!image.diff,
-                selected: index++ === this.selected,
-              })}
-              index=${index}
-            >
-              <div class="indicator"></div>
-              ${this.getName(image as VisualDiffImage)}
-            </div>`;
+          : item();
       });
     };
     return this.db

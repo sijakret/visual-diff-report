@@ -1,9 +1,9 @@
 {
   "name": "visual-diff-html-report",
-  "version": "0.0.2",
+  "version": "0.0.6",
   "description": "",
   "type": "module",
-  "bin": "./dist/src/cli.js",
+  "bin": "./dist/src/bin.js",
   "scripts": {
     "test": "npx mocha dist/test/**/*.test.js",
     "build": "tsc",

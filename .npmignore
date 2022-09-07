@@ -1,5 +1,6 @@
 .tmp
 src
+!src/app/
 test
 *.tgz
 test-data
