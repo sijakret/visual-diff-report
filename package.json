@@ -1,6 +1,6 @@
 {
   "name": "visual-diff-html-report",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "description": "",
   "type": "module",
   "bin": "./dist/src/bin.js",

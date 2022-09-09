@@ -6,6 +6,7 @@ import { VisualDiffImage, VisualDiffReportDB } from "../shared";
 import { basename } from "path";
 import info from "./info.svg?raw";
 import folder from "./folder.svg?raw";
+import github from "./github.svg?raw";
 
 import "./visual-diff";
 import { item } from "./styles";
@@ -62,7 +63,12 @@ export class VisualDiffApp extends LitElement {
         top: 0px;
         font-size: 30px;
         opacity: 0.6;
+        display: flex;
+        flex-direction: row;
         cursor: pointer;
+      }
+      .help svg {
+        margin-left: 8px;
       }
       .help:hover {
         color: rgba(0, 0, 0, 9);
@@ -118,6 +124,9 @@ export class VisualDiffApp extends LitElement {
         width: 100%;
         height: 100%;
         border: 1px slid rgba(0, 0, 0, 0.05);
+      }
+      .octicon-mark-github {
+        opacity: 0.9;
       }
       .indicator {
         display: block;
@@ -288,8 +297,9 @@ export class VisualDiffApp extends LitElement {
       });
     };
     return this.db
-      ? html` <div class="help" @click=${() => (this.help = true)}>
-            ${unsafeHTML(info)}
+      ? html` <div class="help">
+            <div @click=${() => (this.help = true)}>${unsafeHTML(github)}</div>
+            <div @click=${() => (this.help = true)}>${unsafeHTML(info)}</div>
           </div>
           <h1>Visual Diff</h1>
           <h4>${this.db.title}</h4>
@@ -343,7 +353,7 @@ export class VisualDiffApp extends LitElement {
             })}
             @click=${() => (this.help = false)}
           >
-            <div>
+            <div style="position: relative">
               <h1>Navigation</h1>
               <p>
                 Use arrow keys <b>up</b> and <b>down</b> to cycle through
@@ -352,6 +362,11 @@ export class VisualDiffApp extends LitElement {
               <p>
                 Use arrow keys <b>left</b> and <b>right</b> or
                 <b>number keys</b> to cycle through diff visualizations;
+              </p>
+              <p style="position: absolute; top: 8px; right: 16px;">
+                <a href=https://www.npmjs.com/package/visual-diff-html-report>${unsafeHTML(
+                  github
+                )}</a>
               </p>
             </div>
           </div>`
