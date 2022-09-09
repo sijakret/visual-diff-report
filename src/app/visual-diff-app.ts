@@ -257,20 +257,20 @@ export class VisualDiffApp extends LitElement {
   renderMenu() {
     const folded = this.folded;
 
-    let index = -1;
+    let index = 0;
     const renderSubtree = (_subtree: Subtree): TemplateResult[] => {
       return Object.entries(_subtree).map(([key, image]) => {
         const subtree = key.match(/^_subtree:(?<tree>.*)/);
         const item = () => {
-          index++;
+          const i = index++;
           return html`<div
-            @click=${() => (this.selected = index)}
+            @click=${() => console.log((this.selected = i))}
             index=${index}
             class=${classMap({
               item: true,
               passed: !image.diff,
               failed: !!image.diff,
-              selected: index === this.selected,
+              selected: i === this.selected,
             })}
           >
             <div class="indicator"></div>

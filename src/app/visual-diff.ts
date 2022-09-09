@@ -52,12 +52,26 @@ export class VisualDiff extends LitElement {
       }
       .image-label {
         flex: 1 0;
+        opacity: 0.6;
+        display: flex;
+        flex-direction: column;
         font-size: 14px;
         border-radius: 20px;
         text-align: right;
         padding-left: 8px;
         padding-right: 8px;
         background: rgba(255, 255, 255, 0.5);
+        overflow: hidden;
+      }
+      .image-label .top-line {
+        /* Standard CSS ellipsis */
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        /* Beginning of string */
+        direction: rtl;
+        text-align: right;
       }
       .wrap-image:hover .image-label {
         display: initial;
@@ -139,8 +153,8 @@ export class VisualDiff extends LitElement {
       html`<div class="menu">
           ${this.renderMenu()}
           <div class="image-label">
-            ${image}<br />
-            <i>${this.dimensions}</i>
+            <div class="top-line">${image}</div>
+            <div><i>${this.dimensions}</i></div>
           </div>
         </div>
         ${image

@@ -1,6 +1,6 @@
 {
   "name": "visual-diff-html-report",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "",
   "type": "module",
   "bin": "./dist/src/bin.js",
@@ -8,6 +8,7 @@
     "test": "npx mocha dist/test/**/*.test.js",
     "build": "tsc",
     "watch": "tsc --watch",
+    "prepack": "npm run build",
     "dev": "concurrently --kill-others \"npm run watch\" \"npx vite serve --config src/vite.config.dev.ts\"",
     "build:app": "npx vite build --config src/vite.config.ts",
     "doc:build": "typedoc src/lit-shared-state.ts --out dist&&npx rimraf doc/dist&&npx copyfiles src/lit-shared-state.ts doc --flat&&rollup --config doc/rollup.config.build.js",
