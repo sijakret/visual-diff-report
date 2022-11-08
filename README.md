@@ -3,6 +3,8 @@
 Simple cli tool that generates an html report off a folder structure
 With baseline, comparison and diff *.png images.
 
+![Example](example.jpeg)
+
 [Npm package](https://www.npmjs.com/package/visual-diff-html-report)
 
 

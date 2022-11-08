@@ -1,6 +1,6 @@
 {
   "name": "visual-diff-html-report",
-  "version": "0.0.9",
+  "version": "0.1.0",
   "description": "",
   "type": "module",
   "bin": "./dist/src/bin.js",
@@ -18,6 +18,10 @@
   "author": {
     "email": "sijakret@gmail.com",
     "name": "Jan Kretschmer"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sijakret/visual-diff-report.git"
   },
   "license": "MIT",
   "devDependencies": {
