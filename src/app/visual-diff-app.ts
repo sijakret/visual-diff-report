@@ -57,6 +57,13 @@ export class VisualDiffApp extends LitElement {
         flex-direction: column;
         position: relative;
       }
+      .resizer {
+        background-color: #cbd5e0;
+        rgba(0, 0, 0, 0.1);
+        cursor: ew-resize;
+        height: 100%;
+        width: 2px;
+      }
       .help {
         position: fixed;
         right: 10px;
@@ -187,6 +194,10 @@ export class VisualDiffApp extends LitElement {
   @state() search = "";
   @state() filterOption: "all" | "passed" | "failed" = "all";
 
+  // The current position of mouse
+  @state() x = 0;
+  @state() leftWidth = 0;
+
   filterOptions = {
     all: (_image: VisualDiffImage) => true,
     passed: (_image: VisualDiffImage) => !_image.diff,
@@ -194,7 +205,11 @@ export class VisualDiffApp extends LitElement {
   };
 
   _keyDown = this.keyDown.bind(this);
+
   _observer: MutationObserver | undefined;
+  _handleMousedown = this.mouseDownHandler.bind(this);
+  _handleMousemove = this.mouseMoveHandler.bind(this);
+  _handleMouseup = this.mouseUpHandler.bind(this);
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -208,7 +223,10 @@ export class VisualDiffApp extends LitElement {
       this.db = JSON.parse(this.innerHTML);
     });
     this._observer.observe(this.renderRoot, { childList: true });
+
     document.body.addEventListener("keydown", this._keyDown);
+
+    //document.addEventListener("DOMContentLoaded", this._resize);
   }
 
   getName(image: VisualDiffImage) {
@@ -332,8 +350,11 @@ export class VisualDiffApp extends LitElement {
   render() {
     return this.db
       ? html` <div class="frame">
-            <div class="menu">${this.renderMenu()}</div>
-            <div class="content">
+            <div class="menu" id="menu-div">${this.renderMenu()}</div>
+            <div class="resizer" id="dragMe" @mousedown=${
+              this._handleMousedown
+            }></div> 
+            <div class="content" id="content-div">
               <div>
                 <visual-diff
                   @tab-changed=${({ detail }: { detail: number }) =>
@@ -369,6 +390,70 @@ export class VisualDiffApp extends LitElement {
             </div>
           </div>`
       : "loading";
+  }
+
+  // Handle the mousedown event
+  // that's triggered when user drags the resizer
+  mouseDownHandler(e: MouseEvent) {
+    // Query the element
+    const resizer = this.renderRoot.querySelector("#dragMe");
+    const leftSide = this.renderRoot.querySelector("#menu-div");
+    const rightSide = this.renderRoot.querySelector("#content-div");
+
+    console.info("resizer:%s, left:%s, right:%s", resizer, leftSide, rightSide);
+
+    // Get the current mouse position
+    this.x = e.clientX;
+    this.leftWidth = leftSide.getBoundingClientRect().width;
+
+    console.info("Mouse x:%s", this.x);
+    console.info("Left width:%s", this.leftWidth);
+
+    // Attach the listeners to `document`
+    document.addEventListener("mousemove", this._handleMousemove);
+    document.addEventListener("mouseup", this._handleMouseup);
+  }
+
+  mouseMoveHandler(e: MouseEvent) {
+    const resizer = this.renderRoot.querySelector("#dragMe");
+    const leftSide = this.renderRoot.querySelector("#menu-div");
+    const rightSide = this.renderRoot.querySelector("#content-div");
+
+    // How far the mouse has been moved
+    const dx = e.clientX - this.x;
+
+    const newLeftWidth =
+      ((this.leftWidth + dx) * 100) /
+      resizer.parentNode.getBoundingClientRect().width;
+    leftSide.style.width = `${newLeftWidth}%`;
+
+    resizer.style.cursor = "col-resize";
+    document.body.style.cursor = "col-resize";
+
+    leftSide.style.userSelect = "none";
+    leftSide.style.pointerEvents = "none";
+
+    rightSide.style.userSelect = "none";
+    rightSide.style.pointerEvents = "none";
+  }
+
+  mouseUpHandler(e: MouseEvent) {
+    const resizer = this.renderRoot.querySelector("#dragMe");
+    const leftSide = this.renderRoot.querySelector("#menu-div");
+    const rightSide = this.renderRoot.querySelector("#content-div");
+
+    resizer.style.removeProperty("cursor");
+    document.body.style.removeProperty("cursor");
+
+    leftSide.style.removeProperty("user-select");
+    leftSide.style.removeProperty("pointer-events");
+
+    rightSide.style.removeProperty("user-select");
+    rightSide.style.removeProperty("pointer-events");
+
+    // Remove the handlers of `mousemove` and `mouseup`
+    document.removeEventListener("mousemove", this._handleMousemove);
+    document.removeEventListener("mouseup", this._handleMouseup);
   }
 
   keyDown(e: KeyboardEvent) {
