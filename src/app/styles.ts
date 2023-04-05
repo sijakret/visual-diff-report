@@ -5,7 +5,7 @@ export const item = css`
     background: rgba(0, 0, 0, 0.05);
   }
   .item.selected {
-    border: 1px solid rgba(0, 0, 0, 0.4);
+    border: 3px solid rgba(0, 0, 0, 0.6);
   }
   .item {
     transition: box-shadow 0.2s ease-in;
