@@ -161,8 +161,11 @@ export class VisualDiff extends LitElement {
           ? html` <div class="image-container">
               <img
                 src=${image}
-                @load=${({ path }: { path: HTMLImageElement[] }) => {
-                  const img = path[0];
+                @load=${({
+                  srcElement: img,
+                }: {
+                  srcElement: HTMLImageElement;
+                }) => {
                   this.dimensions = `${img.naturalWidth} x ${img.naturalHeight}px`;
                 }}
               />

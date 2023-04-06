@@ -254,8 +254,6 @@ export class VisualDiffApp extends LitElement {
       folder[item.folder[item.folder.length - 1] as string] = item;
     });
 
-    console.log(folders);
-
     return folders;
   }
   disconnectedCallback(): void {
@@ -273,7 +271,7 @@ export class VisualDiffApp extends LitElement {
         const item = () => {
           const i = index++;
           return html`<div
-            @click=${() => console.log((this.selected = i))}
+            @click=${() => console.log("selected item", (this.selected = i))}
             index=${index}
             class=${classMap({
               item: true,
