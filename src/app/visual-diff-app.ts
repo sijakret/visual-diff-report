@@ -1,4 +1,5 @@
 import { html, css, LitElement, TemplateResult } from "lit";
+import { styleMap } from "lit/directives/style-map.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { customElement, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -15,6 +16,9 @@ interface Subtree extends VisualDiffImage {
   name?: string;
   folder?: string[];
 }
+
+// min size of content/menu area
+const minWidthPx = 80;
 
 @customElement("visual-diff-app")
 export class VisualDiffApp extends LitElement {
@@ -50,12 +54,31 @@ export class VisualDiffApp extends LitElement {
       .subtree-title svg {
         opacity: 0.8;
       }
+      .search {
+        display: flex;
+      }
+      .search select {
+        max-width: 50%;
+      }
       .menu {
-        margin: 20px;
-        width: 20%;
+        overflow: hidden;
+        box-sizing: border-box;
+        padding: 20px;
+        min-width: 30%;
         display: flex;
         flex-direction: column;
         position: relative;
+        flex: 0 1;
+      }
+      .resizer {
+        background-color: #cbd5e0;
+        border-left: 2px solid white;
+        border-right: 2px solid white;
+        box-sizing: border-box;
+        cursor: ew-resize;
+        height: 100%;
+        width: 6px;
+        min-width: 6px;
       }
       .help {
         position: fixed;
@@ -101,7 +124,7 @@ export class VisualDiffApp extends LitElement {
       .list {
         display: flex;
         flex-direction: column;
-        overflow-x: hidden;
+        overflow-x: visible
         overflow-y: auto;
       }
       .frame {
@@ -110,9 +133,8 @@ export class VisualDiffApp extends LitElement {
         display: flex;
       }
       .content {
-        width: 100%;
         display: flex;
-        border-left: 1px solid rgba(0, 0, 0, 0.1);
+        flex: 1 1;
       }
       .content > div {
         margin: auto;
@@ -156,8 +178,6 @@ export class VisualDiffApp extends LitElement {
         border-bottom: 0px;
         border: none;
         height: 1px;
-        margin-left: -20px;
-        margin-right: -20px;
         background-color: rgba(0, 0, 0, 0.1);
       }
       input,
@@ -187,6 +207,9 @@ export class VisualDiffApp extends LitElement {
   @state() search = "";
   @state() filterOption: "all" | "passed" | "failed" = "all";
 
+  // current width of left menu
+  @state() menuWidth = 0;
+
   filterOptions = {
     all: (_image: VisualDiffImage) => true,
     passed: (_image: VisualDiffImage) => !_image.diff,
@@ -194,6 +217,7 @@ export class VisualDiffApp extends LitElement {
   };
 
   _keyDown = this.keyDown.bind(this);
+
   _observer: MutationObserver | undefined;
 
   connectedCallback(): void {
@@ -208,6 +232,7 @@ export class VisualDiffApp extends LitElement {
       this.db = JSON.parse(this.innerHTML);
     });
     this._observer.observe(this.renderRoot, { childList: true });
+
     document.body.addEventListener("keydown", this._keyDown);
   }
 
@@ -271,7 +296,7 @@ export class VisualDiffApp extends LitElement {
         const item = () => {
           const i = index++;
           return html`<div
-            @click=${() => console.log("selected item", (this.selected = i))}
+            @click=${() => (this.selected = i)}
             index=${index}
             class=${classMap({
               item: true,
@@ -281,7 +306,7 @@ export class VisualDiffApp extends LitElement {
             })}
           >
             <div class="indicator"></div>
-            ${this.getName(image as VisualDiffImage)}
+            <span>${this.getName(image as VisualDiffImage)}</span>
           </div>`;
         };
         return subtree
@@ -301,16 +326,16 @@ export class VisualDiffApp extends LitElement {
           </div>
           <h1>Visual Diff</h1>
           <h4>${this.db.title}</h4>
-          <input
-            type="search"
-            value=${this.search}
-            @input=${({ target }: { target: HTMLInputElement }) => {
-              this.search = target.value;
-            }}
-            placeholder="Search"
-            class="search-input"
-          />
-          <div>
+          <div class="search">
+            <input
+              type="search"
+              value=${this.search}
+              @input=${({ target }: { target: HTMLInputElement }) => {
+                this.search = target.value;
+              }}
+              placeholder="Search"
+              class="search-input"
+            />
             <select
               @change=${({ target }: Event) =>
                 (this.filterOption = (target as any).value)}
@@ -330,10 +355,24 @@ export class VisualDiffApp extends LitElement {
   }
 
   render() {
+    // unset unless this.menuWidth has been modified
+    const menuStyles =
+      this.menuWidth !== 0
+        ? {
+            with: `${this.menuWidth}px`,
+            minWidth: `${this.menuWidth}px`,
+            maxWidth: `${this.menuWidth}px`,
+          }
+        : {};
     return this.db
       ? html` <div class="frame">
-            <div class="menu">${this.renderMenu()}</div>
-            <div class="content">
+            <div class="menu" id="menu-div" style=${styleMap(
+              menuStyles
+            )}>${this.renderMenu()}</div>
+            <div class="resizer" id="dragMe" @mousedown=${
+              this.resizeMouseDownHandler
+            }></div> 
+            <div class="content" id="content-div">
               <div>
                 <visual-diff
                   @tab-changed=${({ detail }: { detail: number }) =>
@@ -370,6 +409,29 @@ export class VisualDiffApp extends LitElement {
           </div>`
       : "loading";
   }
+
+  // Handle the mousedown event
+  // that's triggered when user drags the resizer
+  resizeMouseDownHandler = () => {
+    // Attach the listeners to `document`
+    document.addEventListener("mousemove", this.resizeMouseMoveHandler);
+    document.addEventListener("mouseup", this.resizeMouseUpHandler, {
+      once: true,
+    });
+  };
+
+  resizeMouseMoveHandler = (e: MouseEvent) => {
+    e.preventDefault(); // prevents unintended selection
+    const left = e.clientX - 2;
+    this.menuWidth = Math.max(
+      minWidthPx,
+      Math.min(window.innerWidth - minWidthPx, left)
+    );
+  };
+
+  resizeMouseUpHandler = (e: MouseEvent) => {
+    document.removeEventListener("mousemove", this.resizeMouseMoveHandler);
+  };
 
   keyDown(e: KeyboardEvent) {
     if (!this.db) {
