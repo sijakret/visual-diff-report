@@ -124,7 +124,7 @@ export class VisualDiffApp extends LitElement {
       .list {
         display: flex;
         flex-direction: column;
-        overflow-x: hidden;
+        overflow-x: visible
         overflow-y: auto;
       }
       .frame {
@@ -306,7 +306,7 @@ export class VisualDiffApp extends LitElement {
             })}
           >
             <div class="indicator"></div>
-            ${this.getName(image as VisualDiffImage)}
+            <span>${this.getName(image as VisualDiffImage)}</span>
           </div>`;
         };
         return subtree
