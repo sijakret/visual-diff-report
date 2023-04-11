@@ -1,4 +1,5 @@
 import { html, css, LitElement, TemplateResult } from "lit";
+import { styleMap } from "lit/directives/style-map.js";
 import { unsafeHTML } from "lit/directives/unsafe-html.js";
 import { customElement, state } from "lit/decorators.js";
 import { classMap } from "lit/directives/class-map.js";
@@ -15,6 +16,9 @@ interface Subtree extends VisualDiffImage {
   name?: string;
   folder?: string[];
 }
+
+// min size of content/menu area
+const minWidthPx = 80;
 
 @customElement("visual-diff-app")
 export class VisualDiffApp extends LitElement {
@@ -50,19 +54,31 @@ export class VisualDiffApp extends LitElement {
       .subtree-title svg {
         opacity: 0.8;
       }
+      .search {
+        display: flex;
+      }
+      .search select {
+        max-width: 50%;
+      }
       .menu {
-        margin: 20px;
-        width: 20%;
+        overflow: hidden;
+        box-sizing: border-box;
+        padding: 20px;
+        min-width: 30%;
         display: flex;
         flex-direction: column;
         position: relative;
+        flex: 0 1;
       }
       .resizer {
         background-color: #cbd5e0;
-        rgba(0, 0, 0, 0.1);
+        border-left: 2px solid white;
+        border-right: 2px solid white;
+        box-sizing: border-box;
         cursor: ew-resize;
         height: 100%;
-        width: 2px;
+        width: 6px;
+        min-width: 6px;
       }
       .help {
         position: fixed;
@@ -117,9 +133,8 @@ export class VisualDiffApp extends LitElement {
         display: flex;
       }
       .content {
-        width: 100%;
         display: flex;
-        border-left: 1px solid rgba(0, 0, 0, 0.1);
+        flex: 1 1;
       }
       .content > div {
         margin: auto;
@@ -163,8 +178,6 @@ export class VisualDiffApp extends LitElement {
         border-bottom: 0px;
         border: none;
         height: 1px;
-        margin-left: -20px;
-        margin-right: -20px;
         background-color: rgba(0, 0, 0, 0.1);
       }
       input,
@@ -194,9 +207,8 @@ export class VisualDiffApp extends LitElement {
   @state() search = "";
   @state() filterOption: "all" | "passed" | "failed" = "all";
 
-  // The current position of mouse
-  @state() x = 0;
-  @state() leftWidth = 0;
+  // current width of left menu
+  @state() menuWidth = 0;
 
   filterOptions = {
     all: (_image: VisualDiffImage) => true,
@@ -207,9 +219,6 @@ export class VisualDiffApp extends LitElement {
   _keyDown = this.keyDown.bind(this);
 
   _observer: MutationObserver | undefined;
-  _handleMousedown = this.mouseDownHandler.bind(this);
-  _handleMousemove = this.mouseMoveHandler.bind(this);
-  _handleMouseup = this.mouseUpHandler.bind(this);
 
   connectedCallback(): void {
     super.connectedCallback();
@@ -225,8 +234,6 @@ export class VisualDiffApp extends LitElement {
     this._observer.observe(this.renderRoot, { childList: true });
 
     document.body.addEventListener("keydown", this._keyDown);
-
-    //document.addEventListener("DOMContentLoaded", this._resize);
   }
 
   getName(image: VisualDiffImage) {
@@ -289,7 +296,7 @@ export class VisualDiffApp extends LitElement {
         const item = () => {
           const i = index++;
           return html`<div
-            @click=${() => console.log("selected item", (this.selected = i))}
+            @click=${() => (this.selected = i)}
             index=${index}
             class=${classMap({
               item: true,
@@ -319,16 +326,16 @@ export class VisualDiffApp extends LitElement {
           </div>
           <h1>Visual Diff</h1>
           <h4>${this.db.title}</h4>
-          <input
-            type="search"
-            value=${this.search}
-            @input=${({ target }: { target: HTMLInputElement }) => {
-              this.search = target.value;
-            }}
-            placeholder="Search"
-            class="search-input"
-          />
-          <div>
+          <div class="search">
+            <input
+              type="search"
+              value=${this.search}
+              @input=${({ target }: { target: HTMLInputElement }) => {
+                this.search = target.value;
+              }}
+              placeholder="Search"
+              class="search-input"
+            />
             <select
               @change=${({ target }: Event) =>
                 (this.filterOption = (target as any).value)}
@@ -348,11 +355,22 @@ export class VisualDiffApp extends LitElement {
   }
 
   render() {
+    // unset unless this.menuWidth has been modified
+    const menuStyles =
+      this.menuWidth !== 0
+        ? {
+            with: `${this.menuWidth}px`,
+            minWidth: `${this.menuWidth}px`,
+            maxWidth: `${this.menuWidth}px`,
+          }
+        : {};
     return this.db
       ? html` <div class="frame">
-            <div class="menu" id="menu-div">${this.renderMenu()}</div>
+            <div class="menu" id="menu-div" style=${styleMap(
+              menuStyles
+            )}>${this.renderMenu()}</div>
             <div class="resizer" id="dragMe" @mousedown=${
-              this._handleMousedown
+              this.resizeMouseDownHandler
             }></div> 
             <div class="content" id="content-div">
               <div>
@@ -394,67 +412,26 @@ export class VisualDiffApp extends LitElement {
 
   // Handle the mousedown event
   // that's triggered when user drags the resizer
-  mouseDownHandler(e: MouseEvent) {
-    // Query the element
-    const resizer = this.renderRoot.querySelector("#dragMe");
-    const leftSide = this.renderRoot.querySelector("#menu-div");
-    const rightSide = this.renderRoot.querySelector("#content-div");
-
-    console.info("resizer:%s, left:%s, right:%s", resizer, leftSide, rightSide);
-
-    // Get the current mouse position
-    this.x = e.clientX;
-    this.leftWidth = leftSide.getBoundingClientRect().width;
-
-    console.info("Mouse x:%s", this.x);
-    console.info("Left width:%s", this.leftWidth);
-
+  resizeMouseDownHandler = () => {
     // Attach the listeners to `document`
-    document.addEventListener("mousemove", this._handleMousemove);
-    document.addEventListener("mouseup", this._handleMouseup);
-  }
+    document.addEventListener("mousemove", this.resizeMouseMoveHandler);
+    document.addEventListener("mouseup", this.resizeMouseUpHandler, {
+      once: true,
+    });
+  };
 
-  mouseMoveHandler(e: MouseEvent) {
-    const resizer = this.renderRoot.querySelector("#dragMe");
-    const leftSide = this.renderRoot.querySelector("#menu-div");
-    const rightSide = this.renderRoot.querySelector("#content-div");
+  resizeMouseMoveHandler = (e: MouseEvent) => {
+    e.preventDefault(); // prevents unintended selection
+    const left = e.clientX - 2;
+    this.menuWidth = Math.max(
+      minWidthPx,
+      Math.min(window.innerWidth - minWidthPx, left)
+    );
+  };
 
-    // How far the mouse has been moved
-    const dx = e.clientX - this.x;
-
-    const newLeftWidth =
-      ((this.leftWidth + dx) * 100) /
-      resizer.parentNode.getBoundingClientRect().width;
-    leftSide.style.width = `${newLeftWidth}%`;
-
-    resizer.style.cursor = "col-resize";
-    document.body.style.cursor = "col-resize";
-
-    leftSide.style.userSelect = "none";
-    leftSide.style.pointerEvents = "none";
-
-    rightSide.style.userSelect = "none";
-    rightSide.style.pointerEvents = "none";
-  }
-
-  mouseUpHandler(e: MouseEvent) {
-    const resizer = this.renderRoot.querySelector("#dragMe");
-    const leftSide = this.renderRoot.querySelector("#menu-div");
-    const rightSide = this.renderRoot.querySelector("#content-div");
-
-    resizer.style.removeProperty("cursor");
-    document.body.style.removeProperty("cursor");
-
-    leftSide.style.removeProperty("user-select");
-    leftSide.style.removeProperty("pointer-events");
-
-    rightSide.style.removeProperty("user-select");
-    rightSide.style.removeProperty("pointer-events");
-
-    // Remove the handlers of `mousemove` and `mouseup`
-    document.removeEventListener("mousemove", this._handleMousemove);
-    document.removeEventListener("mouseup", this._handleMouseup);
-  }
+  resizeMouseUpHandler = (e: MouseEvent) => {
+    document.removeEventListener("mousemove", this.resizeMouseMoveHandler);
+  };
 
   keyDown(e: KeyboardEvent) {
     if (!this.db) {
