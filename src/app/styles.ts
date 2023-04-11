@@ -7,7 +7,7 @@ export const item = css`
   .item.selected {
     border: 1px solid rgba(0, 0, 0, 0.6);
   }
-  .item.selected::before {
+  .menu .item.selected::before {
     content: ">";
     position: absolute;
     right: calc(100%);

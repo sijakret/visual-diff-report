@@ -19,7 +19,7 @@ export class VisualDiff extends LitElement {
         max-width: 100%;
         max-height: 100%;
       }
-      .menu {
+      .top-menu {
         display: flex;
         width: 100%;
         margin-bottom: 20px;
@@ -150,7 +150,7 @@ export class VisualDiff extends LitElement {
 
   renderImage(image?: string) {
     return () =>
-      html`<div class="menu">
+      html`<div class="top-menu">
           ${this.renderMenu()}
           <div class="image-label">
             <div class="top-line">${image}</div>
