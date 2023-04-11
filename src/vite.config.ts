@@ -14,7 +14,6 @@ export default (
   defineConfig({
     build: {
       outDir: "../dist/app",
-      emptyOutDir: true,
       sourcemap: true,
     },
     resolve: {
