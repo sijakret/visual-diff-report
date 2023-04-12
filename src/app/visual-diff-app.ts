@@ -61,7 +61,7 @@ export class VisualDiffApp extends LitElement {
         max-width: 50%;
       }
       .menu {
-        overflow: hidden;
+        overflow: hidden auto;
         box-sizing: border-box;
         padding: 20px;
         min-width: 30%;
